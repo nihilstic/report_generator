@@ -1,0 +1,9 @@
+Index;Vulnérabilité;Risque;Impact sur les données;Niveau de risque;Description
+Reflected_XSS_All_Clients;Injection de scripts via XSS réfléchie;Exécution de commandes malveillantes;Confidentialité, Intégrité, Disponibilité;Majeur (X occurrences);
+SQL_Injection;Injection SQL;Récupération de données ou injection de données erronées;Confidentialité, Intégrité, Disponibilité;Majeur (X occurrences);
+Stored_XSS;Injection de scripts via XSS;Exécution de commandes malveillantes;Confidentialité, Intégrité, Disponibilité;Majeur (X occurrences);
+Unsafe_Reflection;Utilisation dangereuse de reflection;Bypass des mécanismes d'authentification ou de contrôle;Confidentialité;Majeur (X occurrences);
+Second_Order_SQL_Injection;Injection SQL latente;Exécution de commandes malveillantes;Confidentialité, Intégrité, Disponibilité;Majeur (X occurrences);
+Code_Injection;Injection de code;Exécution de commandes malveillantes;Confidentialité, Intégrité, Disponibilité;Majeur (X occurrences);
+Deserialization_of_Unstrusted_Data_in_JMS;Déserialisation de données dans JMS;Exécution de commandes malveillantes, DOS;Confidentialité, Intégrité, Disponibilité;Majeur (X occurrences);
+XPath_Injection;Injection Xpath;Récupération de données;Confidentialité;Majeur (X occurrences);

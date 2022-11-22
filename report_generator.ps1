@@ -2,6 +2,7 @@
 ## Infos ##
 $app_name="APP"
 $date=Get-Date -Format "MMyy"
+$redacteur = "Matthieu FOUET"
 
 #-----------------------------CODE-------------------------------#
 
@@ -18,10 +19,8 @@ function FindRange($search)
     $paras = $doc.Paragraphs
     foreach ($para in $paras){
         if ($para.Range.Text -match $search){
-            $startPosition = $para.Range.Start
-            $endPosition = $para.Range.Start
-            return $startPosition
-            return $endPosition
+            $position = $para.Range.End
+            return $position
         }
     }
 }
@@ -30,18 +29,16 @@ function FindRange($search)
 
 $sel.Find.Execute("<APP>",$false,$true,$false,$false,$false,$true,1,$false,$app_name,1)
 $sel.Find.Execute("<DATE>",$false,$true,$false,$false,$false,$true,1,$false,$date,1)
-$sel.Find.Execute("<RESUME_TABLE>",$false,$true,$false,$false,$false,$true,1,$false,$null,1)
-$sel.Find.Execute("<RESUME_TABLE>",$false,$true,$false,$false,$false,$true,1,$false,$null,1)
+$sel.Find.Execute("<REDACTEUR>",$false,$true,$false,$false,$false,$true,1,$false,$redacteur,1)
 
 ## Data Imports ##
-$all_resume=Import-Csv "$folder_path\all_resume.csv" -Delimiter ";" -Encoding UTF7
-$resume_table = $all_resume | Out-GridView -OutputMode Multiple 
+$all_vulns=Import-Csv "$folder_path\all_vulns.csv" -Delimiter ";" -Encoding UTF7
+$resume_table = $all_vulns | Out-GridView -OutputMode Multiple -Title "Tableau résumé : Sélectionner les vulnérabilités"
+
 ## Resume table ##
-$resume_rows=($resume_table.count+1)
-$resume_columns=($resume_table|gm -MemberType NoteProperty).count
-FindRange("<RESUME_TABLE>")
-$range = $doc.Range($startPosition, $endPosition)
-$table = $doc.Tables.Add($range,$resume_rows,$resume_columns) 
+$SearchPosition = FindRange("<RESUME_TABLE>")
+$range = $doc.Range($SearchPosition, $SearchPosition)
+$table = $doc.Tables.Add($range,$($resume_table.count+1),4)
 $table.Style = "resume_table"
 $table.cell(1,1).range.text = "Index"
 $table.cell(1,2).range.text = "Vulnérabilité"
@@ -57,37 +54,37 @@ for ($i=0; $i -lt $resume_table.Count; $i++){
 $sel.Find.Execute("<RESUME_TABLE>",$false,$true,$false,$false,$false,$true,1,$false,$null,1)
 
 ## Vulns tables ##
-$all_vulns=Import-Csv "$folder_path\all_vulns.csv" -Delimiter ";" -Encoding UTF7
-$vulns_table = $all_vulns | Out-GridView -OutputMode Multiple 
-FindRange("<VULN_TABLE>")
-$range = $doc.Range($startPosition, $endPosition)
-$table = $doc.Tables.Add($range,5,2) 
-$table.Style = "vuln_table"
-$table.cell(1,1).range.text = "Index $vuln" ##vuln
-$table.cell(2,1).range.text = "Vulnérabilité"
-$table.cell(3,1).range.text = "Niveau de risque"
-$table.cell(4,1).range.text = "Risque"
-$table.cell(5,1).range.text = "Fichier concernés"               
+$vuln_table = $all_vulns | Out-GridView -OutputMode Multiple -Title "Tableaux détaillés : Sélectionner les vulnérabilités"
+
+
+$position = $(FindRange("<VULN_TABLE>"))
+$range = $doc.Range($position, $position)
 
 for ($i=0; $i -lt $vuln_table.Count; $i++){
-    $table.cell(($i+2),2).Range.Text = $vuln_table[$i].Index
-    $table.cell(($i+2),2).Range.Text = $vuln_table[$i].""
-    $table.cell(($i+2),2).Range.Text = $vuln_table[$i].""
-    $table.cell(($i+2),2).Range.Text = $vuln_table[$i].""
+    $table = $doc.Tables.Add($range,5,2) 
+    $table.Style = "vuln_table"
+    $cellw = $table.Cell(1,1).Width;$table.Cell(1,1).Merge($table.cell(1,2));$table.Cell(1,1).Width = $($cellw * 2) 
+    $table.Cell(2,1).Range.Text = "Vulnérabilité"
+    $table.Cell(3,1).Range.Text = "Niveau de risque"
+    $table.Cell(4,1).Range.Text = "Impact sur les données"
+    $table.Cell(5,1).Range.Text = "Cx Url"    
+    $table.Cell(1,1).Range.Text = "Index $($vuln_table[$i]."Index")"
+    $table.Cell(2,2).Range.Text = $vuln_table[$i]."Vulnérabilité"
+    $table.Cell(3,2).Range.Text = $vuln_table[$i]."Niveau de risque"
+    $table.Cell(4,2).Range.Text = $vuln_table[$i]."Impact sur les données"
+    $range=$doc.Range($($table.Range.End + 1), $($table.Range.End + 1))
 }
 $sel.Find.Execute("<VULN_TABLE>",$false,$true,$false,$false,$false,$true,1,$false,$null,1)
-
 
 ## Export ##
 $report_path="$folder_path\test.docx"
 $doc.SaveAs("$report_path");$doc.Close();$word.Quit()
 
-
 ## Cleaning ##
 [System.Runtime.Interopservices.Marshal]::ReleaseComObject($doc) | Out-Null
 [System.Runtime.Interopservices.Marshal]::ReleaseComObject($word) | Out-Null
 [System.Runtime.Interopservices.Marshal]::ReleaseComObject($range) | Out-Null
-[System.Runtime.Interopservices.Marshal]::ReleaseComObject($table) | Out-Null
+#[System.Runtime.Interopservices.Marshal]::ReleaseComObject($table) | Out-Null
 Remove-Variable doc,word,range,table
 [gc]::Collect()
 [gc]::WaitForPendingFinalizers()
