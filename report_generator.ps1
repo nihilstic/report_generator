@@ -13,6 +13,8 @@ $template="$folder_path\template.docx"
 $doc = $word.Documents.Open(“$folder_path\template.docx”)
 $sel=$word.selection
 
+
+
 ## Functions ##
 function FindRange($search)
 {
@@ -24,7 +26,7 @@ function FindRange($search)
         }
     }
 }
-
+<#
 ## General ##
 
 $sel.Find.Execute("<APP>",$false,$true,$false,$false,$false,$true,1,$false,$app_name,1)
@@ -64,17 +66,31 @@ for ($i=0; $i -lt $vuln_table.Count; $i++){
     $table = $doc.Tables.Add($range,5,2) 
     $table.Style = "vuln_table"
     $cellw = $table.Cell(1,1).Width;$table.Cell(1,1).Merge($table.cell(1,2));$table.Cell(1,1).Width = $($cellw * 2) 
+    $table.Cell(1,1).Range.Text = "Index $($vuln_table[$i]."Index")"
     $table.Cell(2,1).Range.Text = "Vulnérabilité"
     $table.Cell(3,1).Range.Text = "Niveau de risque"
     $table.Cell(4,1).Range.Text = "Impact sur les données"
-    $table.Cell(5,1).Range.Text = "Cx Url"    
-    $table.Cell(1,1).Range.Text = "Index $($vuln_table[$i]."Index")"
+    $table.Cell(5,1).Range.Text = "Cx Url"  
+    $table.Cell(6,1).Range.Text = "Description"  
     $table.Cell(2,2).Range.Text = $vuln_table[$i]."Vulnérabilité"
     $table.Cell(3,2).Range.Text = $vuln_table[$i]."Niveau de risque"
     $table.Cell(4,2).Range.Text = $vuln_table[$i]."Impact sur les données"
+    $table.Cell(5,2).Range.Text = $vuln_table[$i]."Description"
     $range=$doc.Range($($table.Range.End + 1), $($table.Range.End + 1))
 }
 $sel.Find.Execute("<VULN_TABLE>",$false,$true,$false,$false,$false,$true,1,$false,$null,1)
+
+#>
+
+## Chart ##
+
+$vuln_chart = $doc.InlineShapes(5).Chart
+write-host $vuln_chart.ChartData.Workbook.ActiveSheet.Rows[2].Value2
+$crit_chart = $vuln_chart.ChartData.Workbook.ActiveSheet.Rows[2].Formula = @("Critique",1,$null,$null)
+#$crit_chart = $vuln_chart.ChartData.Workbook.ActiveSheet.Rows[2].Formula = @("Critique",1)
+#$crit_chart = $vuln_chart.ChartData.Workbook.ActiveSheet.Rows[2].Formula = @("Critique",1)
+#$crit_chart = $vuln_chart.ChartData.Workbook.ActiveSheet.Rows[2].Formula = @("Critique",1)
+
 
 ## Export ##
 $report_path="$folder_path\test.docx"
