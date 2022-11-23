@@ -9,7 +9,6 @@ $redacteur = "Matthieu FOUET"
 ## WORD INIT ##
 $folder_path="$env:USERPROFILE\Desktop\Rapport\"
 $word = New-Object -comobject Word.Application;$word.Visible = $false
-$template="$folder_path\template.docx"
 $doc = $word.Documents.Open(“$folder_path\template.docx”)
 $sel=$word.selection
 
