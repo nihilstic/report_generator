@@ -13,7 +13,15 @@ $template="$folder_path\template.docx"
 $doc = $word.Documents.Open(“$folder_path\template.docx”)
 $sel=$word.selection
 
-
+## Datas from Cx export ##
+$crit_value = 10
+$maj_value = 5
+$mod_value = 3
+$min_value = 2
+$bp_value  = 1
+$weak_point_1 = ""
+$weak_point_2 = ""
+$weak_point_3 = ""
 
 ## Functions ##
 function FindRange($search)
@@ -21,25 +29,32 @@ function FindRange($search)
     $paras = $doc.Paragraphs
     foreach ($para in $paras){
         if ($para.Range.Text -match $search){
-            $position = $para.Range.End
+            $start_position = $para.Range.start
+            $end_position = $para.Range.End
+            $position = @($start_position,$end_position)
             return $position
         }
     }
 }
-<#
-## General ##
 
+## General ##
 $sel.Find.Execute("<APP>",$false,$true,$false,$false,$false,$true,1,$false,$app_name,1)
 $sel.Find.Execute("<DATE>",$false,$true,$false,$false,$false,$true,1,$false,$date,1)
 $sel.Find.Execute("<REDACTEUR>",$false,$true,$false,$false,$false,$true,1,$false,$redacteur,1)
 
-## Data Imports ##
-$all_vulns=Import-Csv "$folder_path\all_vulns.csv" -Delimiter ";" -Encoding UTF7
-$resume_table = $all_vulns | Out-GridView -OutputMode Multiple -Title "Tableau résumé : Sélectionner les vulnérabilités"
+## Resume Chart ##
+$vuln_chart = $doc.InlineShapes(5).Chart
+$crit_value = $vuln_chart.ChartData.Workbook.ActiveSheet.Rows[2].Cells[2].Formula = $crit_value
+$maj_value = $vuln_chart.ChartData.Workbook.ActiveSheet.Rows[3].Cells[2].Formula = $maj_value
+$mod_value = $vuln_chart.ChartData.Workbook.ActiveSheet.Rows[4].Cells[2].Formula = $mod_value
+$min_value = $vuln_chart.ChartData.Workbook.ActiveSheet.Rows[5].Cells[2].Formula = $min_value
+$bp_value = $vuln_chart.ChartData.Workbook.ActiveSheet.Rows[6].Cells[2].Formula = $bp_value
 
 ## Resume table ##
-$SearchPosition = FindRange("<RESUME_TABLE>")
-$range = $doc.Range($SearchPosition, $SearchPosition)
+$all_vulns=Import-Csv "$folder_path\all_vulns.csv" -Delimiter ";" -Encoding UTF7
+$resume_table = $all_vulns | Out-GridView -OutputMode Multiple -Title "Tableau résumé : Sélectionner les vulnérabilités"
+$position = FindRange("<RESUME_TABLE>")
+$range = $doc.Range($position[1], $position[1])
 $table = $doc.Tables.Add($range,$($resume_table.count+1),4)
 $table.Style = "resume_table"
 $table.cell(1,1).range.text = "Index"
@@ -57,10 +72,8 @@ $sel.Find.Execute("<RESUME_TABLE>",$false,$true,$false,$false,$false,$true,1,$fa
 
 ## Vulns tables ##
 $vuln_table = $all_vulns | Out-GridView -OutputMode Multiple -Title "Tableaux détaillés : Sélectionner les vulnérabilités"
-
-
 $position = $(FindRange("<VULN_TABLE>"))
-$range = $doc.Range($position, $position)
+$range = $doc.Range($position[1], $position[1])
 
 for ($i=0; $i -lt $vuln_table.Count; $i++){
     $table = $doc.Tables.Add($range,5,2) 
@@ -80,17 +93,12 @@ for ($i=0; $i -lt $vuln_table.Count; $i++){
 }
 $sel.Find.Execute("<VULN_TABLE>",$false,$true,$false,$false,$false,$true,1,$false,$null,1)
 
-#>
+## Additionals points ##
+$position = $(FindRange("<ADDITIONNALS>"))
+$range = $doc.Range($position[1], $position[1])
 
-## Chart ##
 
-$vuln_chart = $doc.InlineShapes(5).Chart
-write-host $vuln_chart.ChartData.Workbook.ActiveSheet.Rows[2].Value2
-$crit_chart = $vuln_chart.ChartData.Workbook.ActiveSheet.Rows[2].Formula = @("Critique",1,$null,$null)
-#$crit_chart = $vuln_chart.ChartData.Workbook.ActiveSheet.Rows[2].Formula = @("Critique",1)
-#$crit_chart = $vuln_chart.ChartData.Workbook.ActiveSheet.Rows[2].Formula = @("Critique",1)
-#$crit_chart = $vuln_chart.ChartData.Workbook.ActiveSheet.Rows[2].Formula = @("Critique",1)
-
+$sel.Find.Execute("<ADDITIONNALS>",$false,$true,$false,$false,$false,$true,1,$false,$null,1)
 
 ## Export ##
 $report_path="$folder_path\test.docx"
